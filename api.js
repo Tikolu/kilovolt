@@ -3,7 +3,7 @@ import { parseArgs } from "jsr:@std/cli/parse-args"
 import { hash } from "node:crypto"
 
 const args = parseArgs(Deno.args, {
-	string: ["port"],
+	string: ["host", "port"],
 	boolean: ["verbose"]
 })
 
@@ -91,6 +91,7 @@ async function handleRequest(request) {
 					const db = await dbPromise
 					result = await action(body, db, socket)
 				} catch (error) {
+					console.error(error)
 					result = {error: error.message}
 				}
 			}
@@ -139,6 +140,7 @@ function createResponse(data, status = 200) {
 }
 
 Deno.serve({
+	hostname: args.host || "localhost",
 	port: Number(args.port || 1000)
 }, async (request) => {
 	const response = await handleRequest(request).catch(error => {
