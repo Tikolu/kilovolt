@@ -31,7 +31,12 @@ export class KilovoltDB {
 		} else {
 			const instance = new KilovoltDB(dbName, verbose)
 			instances[dbName] = instance
-			await instance.open()
+			try {
+				await instance.open()
+			} catch (error) {
+				delete instances[dbName]
+				throw error
+			}
 			return instance
 		}
 	}
@@ -40,6 +45,7 @@ export class KilovoltDB {
 		this.kv = null
 		this.dbName = dbName
 		this.verbose = verbose
+		this.active = false
 	}
 
 	async open() {
@@ -51,10 +57,12 @@ export class KilovoltDB {
 		} catch {}
 
 		this.kv = await Deno.openKv(`${storagePath}/${this.dbName}`)
+		this.active = true
 	}
 
 	async getIndex(key) {
 		if(this.verbose) console.log(this.dbName, "get index", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 
@@ -68,6 +76,7 @@ export class KilovoltDB {
 
 	async setIndex(key, index, recursive = false) {
 		if(this.verbose) console.log(this.dbName, "set index", formatKey(key), index)
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 
@@ -111,6 +120,7 @@ export class KilovoltDB {
 
 	async get(key) {
 		if(this.verbose) console.log(this.dbName, "get", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 		let result = await this.kv.get(key)
@@ -120,6 +130,7 @@ export class KilovoltDB {
 
 	async set(key, value) {
 		if(this.verbose) console.log(this.dbName, "set", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 
@@ -153,6 +164,7 @@ export class KilovoltDB {
 
 	async delete(key) {
 		if(this.verbose) console.log(this.dbName, "delete", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 
@@ -178,6 +190,7 @@ export class KilovoltDB {
 
 	async deleteSubtree(key) {
 		if(this.verbose) console.log(this.dbName, "delete subtree", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
 
 		key = parseKey(key)
 
