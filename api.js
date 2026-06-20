@@ -149,3 +149,8 @@ Deno.serve({
 	})
 	return createResponse(response)
 })
+
+Deno.addSignalListener("SIGINT", async () => {
+	await KilovoltDB.closeAll()
+	Deno.exit()
+})

@@ -30,6 +30,7 @@ async function importDir(dir, key=[]) {
 if(args.dir) {
 	await importDir(args.dir)
 	console.log("Import complete")
+	db.close()
 } else {
 	console.log("No directory specified for import")
 }

@@ -41,6 +41,13 @@ export class KilovoltDB {
 		}
 	}
 
+	static async closeAll() {
+		for(const instance of Object.values(instances)) {
+			await instance.close()
+			delete instances[instance.dbName]
+		}
+	}
+
 	constructor(dbName, verbose = false) {
 		this.kv = null
 		this.dbName = dbName
@@ -58,6 +65,12 @@ export class KilovoltDB {
 
 		this.kv = await Deno.openKv(`${storagePath}/${this.dbName}`)
 		this.active = true
+	}
+
+	async close() {
+		if(this.verbose) console.log("close", this.dbName)
+		await this.kv.close()
+		this.kv = null
 	}
 
 	async getIndex(key) {
