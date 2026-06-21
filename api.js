@@ -49,6 +49,9 @@ async function action(body, db, socket=null) {
 		const index = await db.getIndex(body.key)
 		return Array.from(index || [])
 
+	} else if(body.action == "exists") {
+		return await db.exists(body.key)
+
 	} else {
 		return {error: "Invalid action"}
 	}

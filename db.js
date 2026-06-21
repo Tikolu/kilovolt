@@ -201,6 +201,16 @@ export class KilovoltDB {
 		return result
 	}
 
+	async exists(key) {
+		if(this.verbose) console.log(this.dbName, "exists", formatKey(key))
+		if(!this.active) throw new Error("Database is not open")
+
+		key = parseKey(key)
+
+		const {value} = await this.kv.get(key)
+		return value !== null
+	}
+
 	async deleteSubtree(key) {
 		if(this.verbose) console.log(this.dbName, "delete subtree", formatKey(key))
 		if(!this.active) throw new Error("Database is not open")

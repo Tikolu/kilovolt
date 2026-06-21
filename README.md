@@ -35,7 +35,7 @@ Use `api.js` to host a simple API for interacting with the database. Default hos
 ```bash
 deno --unstable-kv api.js --host=<host> --port=<port>
 ```
-Supported actions: `get`, `set`, `index`, and `delete`. Example JSON POST request body:
+Supported actions: `get`, `set`, `index`, `exists`, and `delete`. Example JSON POST request body:
 ```json
 {"action": "set", "key": "users/123/details", "value": {"name": "Tikolu"}}
 ```
