@@ -5,6 +5,11 @@ function parseKey(key) {
 	if(Array.isArray(key)) {
 		return [...key]
 	} else if(typeof key == "string") {
+		if(key.includes("//")) throw new Error("Invalid key: contains empty segments")
+		if(key !== "/") {
+			if(key.startsWith("/")) throw new Error("Invalid key: starts with /")
+			if(key.endsWith("/")) throw new Error("Invalid key: ends with /")
+		}
 		return key.split("/").filter(Boolean)
 	} else {
 		throw new Error("Invalid key type")
