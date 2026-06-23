@@ -180,7 +180,7 @@ export class KilovoltDB {
 		return result
 	}
 
-	async delete(key) {
+	async delete(key, removeFromIndex = true) {
 		if(this.verbose) console.log(this.dbName, "delete", formatKey(key))
 		if(!this.active) throw new Error("Database is not open")
 
@@ -198,10 +198,12 @@ export class KilovoltDB {
 		const result = await this.kv.delete(key)
 
 		// Remove key from index
-		const indexKey = key.slice(0, -1)
-		const index = await this.getIndex(indexKey) || new Set()
-		index.delete(key.at(-1))
-		await this.setIndex(indexKey, index)
+		if(removeFromIndex) {
+			const indexKey = key.slice(0, -1)
+			const index = await this.getIndex(indexKey) || new Set()
+			index.delete(key.at(-1))
+			await this.setIndex(indexKey, index)
+		}
 
 		return result
 	}
@@ -216,19 +218,19 @@ export class KilovoltDB {
 		return value !== null
 	}
 
-	async deleteSubtree(key) {
+	async deleteSubtree(key, deleteSelf = true) {
 		if(this.verbose) console.log(this.dbName, "delete subtree", formatKey(key))
 		if(!this.active) throw new Error("Database is not open")
-
+			
 		key = parseKey(key)
 
 		const index = await this.getIndex(key)
-		if(!index) return
 
-		for(const child of index) {
-			await this.deleteSubtree([...key, child])
+		for(const child of index || []) {
+			await this.deleteSubtree([...key, child], false)
+			await this.delete([...key, child], false)
 		}
 
-		await this.delete(key)
+		if(index) await this.delete([...key, "_kvdb_index"], false)
 	}
 }
