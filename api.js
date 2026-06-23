@@ -86,17 +86,18 @@ async function handleRequest(request) {
 		socket.onmessage = async event => {
 			let result = {}
 
-			if(socket.hook) result = await socket.hook(event.data)
+			try {
+				if(socket.hook) {
+					result = await socket.hook(event.data)
 
-			else {
-				try {
+				} else {
 					const body = JSON.parse(event.data)
 					const db = await dbPromise
 					result = await action(body, db, socket)
-				} catch (error) {
-					console.error(error)
-					result = {error: error.message}
 				}
+			} catch (error) {
+				console.error(error)
+				result = {error: error.message}
 			}
 
 			socket.send(
