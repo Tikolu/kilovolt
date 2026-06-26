@@ -215,7 +215,11 @@ export class KilovoltDB {
 		key = parseKey(key)
 
 		const {value} = await this.kv.get(key)
-		return value !== null
+		if(value !== null) return true
+
+		// Check for index
+		const index = await this.getIndex(key)
+		return index?.length > 0
 	}
 
 	async deleteSubtree(key, deleteSelf = true) {
