@@ -219,7 +219,7 @@ export class KilovoltDB {
 
 		// Check for index
 		const index = await this.getIndex(key)
-		return index?.length > 0
+		return index?.size > 0
 	}
 
 	async deleteSubtree(key, deleteSelf = true) {
@@ -236,5 +236,6 @@ export class KilovoltDB {
 		}
 
 		if(index) await this.delete([...key, "_kvdb_index"], false)
+		if(deleteSelf) await this.delete(key, true)
 	}
 }
