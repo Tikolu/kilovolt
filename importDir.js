@@ -11,6 +11,8 @@ const db = await KilovoltDB.init(args.db || "main", args.verbose)
 const textDecoder = new TextDecoder("utf-8", {fatal: true})
 
 async function importDir(dir, key=[]) {
+	console.log("importing", dir)
+
 	for await (const entry of Deno.readDir(dir)) {
 		if(entry.isFile) {
 			let value = await Deno.readFile(`${dir}/${entry.name}`)
@@ -23,8 +25,6 @@ async function importDir(dir, key=[]) {
 			await importDir(`${dir}/${entry.name}`, [...key, entry.name])
 		}
 	}
-
-	console.log("finished importing", dir)
 }
 
 if(args.dir) {
