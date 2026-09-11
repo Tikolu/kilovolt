@@ -52,6 +52,10 @@ async function action(body, db, socket=null) {
 	} else if(body.action == "exists") {
 		return await db.exists(body.key)
 
+	} else if(body.action == "copySubtree") {
+		if(!body.newKey) return {error: "newKey is required"}
+		return await db.copySubtree(body.key, body.newKey)
+		
 	} else {
 		return {error: "Invalid action"}
 	}

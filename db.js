@@ -1,7 +1,7 @@
-const storagePath = Deno.env.get("STORAGE_PATH") || "db"
+const STORAGE_PATH = Deno.env.get("STORAGE_PATH") || "db"
 const instances = {}
 
-function parseKey(key) {
+export function parseKey(key) {
 	if(Array.isArray(key)) {
 		return [...key]
 	} else if(typeof key == "string") {
@@ -16,7 +16,7 @@ function parseKey(key) {
 	}
 }
 
-function formatKey(key) {
+export function formatKey(key) {
 	if(Array.isArray(key)) {
 		return key.join("/")
 	} else if(typeof key == "string") {
@@ -24,6 +24,16 @@ function formatKey(key) {
 	} else {
 		throw new Error("Invalid key type")
 	}
+}
+
+export function keyEquals(key1, key2) {
+	key1 = parseKey(key1)
+	key2 = parseKey(key2)
+	if(key1.length !== key2.length) return false
+	for(let i = 0; i < key1.length; i++) {
+		if(key1[i] !== key2[i]) return false
+	}
+	return true
 }
 
 
@@ -65,10 +75,10 @@ export class KilovoltDB {
 
 		// Create db directory if it doesn't exist
 		try {
-			await Deno.mkdir(storagePath, {recursive: true})
+			await Deno.mkdir(STORAGE_PATH, {recursive: true})
 		} catch {}
 
-		this.kv = await Deno.openKv(`${storagePath}/${this.dbName}`)
+		this.kv = await Deno.openKv(`${STORAGE_PATH}/${this.dbName}`)
 		this.active = true
 	}
 
@@ -237,5 +247,35 @@ export class KilovoltDB {
 
 		if(index) await this.delete([...key, "_kvdb_index"], false)
 		if(deleteSelf) await this.delete(key, true)
+	}
+
+	async copySubtree(oldKey, newKey, newRoot=null) {
+		if(this.verbose) console.log(this.dbName, "copy", formatKey(oldKey), "to", formatKey(newKey))
+		if(!this.active) throw new Error("Database is not open")
+
+		oldKey = parseKey(oldKey)
+		newKey = parseKey(newKey)
+		newRoot = parseKey(newRoot || newKey)
+
+		if(keyEquals(oldKey, newKey)) {
+			throw new Error("Cannot copy subtree to the same key")
+		}
+
+		// Check if newKey already exists
+		if(await this.exists(newKey)) {
+			throw new Error("Cannot copy subtree to an existing key")
+		}
+
+		// Copy root
+		const value = await this.get(oldKey)
+		await this.set(newKey, value)
+
+		// Copy subtree
+		const index = await this.getIndex(oldKey)
+		for(const child of index || []) {
+			// Skip newly copied root to avoid infinite recursion
+			if(keyEquals([...oldKey, child], newRoot)) continue
+			await this.copySubtree([...oldKey, child], [...newKey, child], newRoot)
+		}
 	}
 }
